@@ -1,0 +1,76 @@
+# https://github.com/awslabs/aws-lambda-web-adapter/blob/fcfe4553df27ecf251b8f1e7a005857455eff421/examples/nextjs/template.yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Hono.js Serverless API
+
+# https://docs.aws.amazon.com/ja_jp/serverless-application-model/latest/developerguide/sam-specification-template-anatomy-globals.html
+Globals:
+  Function:
+    Timeout: 60
+
+# https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html
+Parameters:
+  FunctionName:
+    Type: String
+  LogRetentionInDays:
+    Type: Number
+    Default: 365
+  # Application settings
+  BasePath:
+    Type: String
+    Default: '/'
+  SsmParameterPath:
+    Type: String
+    Default: ''
+  #VPC settings if you want to connect to a VPC
+  #SecurityGroupIds:
+  #  Type: List<AWS::EC2::SecurityGroup::Id>
+  #SubnetIds:
+  #  Type: List<AWS::EC2::Subnet::Id>
+
+Resources:
+
+  # https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-logs-loggroup.html
+  HonoFunctionLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${FunctionName}"
+      RetentionInDays: !Ref LogRetentionInDays
+
+  # https://docs.aws.amazon.com/ja_jp/serverless-application-model/latest/developerguide/sam-resource-function.html
+  HonoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      CodeUri: .
+      Handler: lambda.handler
+      Runtime: nodejs20.x
+      MemorySize: 512
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          NODE_OPTIONS: --enable-source-maps
+          BASE_PATH: !Ref BasePath
+          AWS_SSM_PARAMETER_PATH: !Ref SsmParameterPath
+      Policies:
+        - SSMParameterWithSlashPrefixReadPolicy:
+            ParameterName: !Ref SsmParameterPath
+      # VPC settings if you want to connect to a VPC
+      #VpcConfig:
+      #  SecurityGroupIds: !Ref SecurityGroupIds
+      #  SubnetIds: !Ref SubnetIds
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        OutExtension: ['.js=.mjs']
+        Platform: node
+        Target: node20
+        Minify: false
+        Sourcemap: true
+        EntryPoints: ['lambda.ts']
+        # aws-sdk v3 is already included in the AWS Lambda runtime
+        External: ['@aws-sdk/*']
+    DependsOn:
+      - HonoFunctionLog
