@@ -15,6 +15,7 @@
     "hono": "^4.4.5"
   },
   "devDependencies": {
+    "@aws-sdk/client-ssm": "^3.592.0",
     "@hono/eslint-config": "^0.0.6",
     "@hono/node-server": "^1.11.2",
     "@types/node": "^20.14.2",
