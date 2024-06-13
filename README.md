@@ -41,3 +41,6 @@ AWS Systems Manager の Parameter Store から設定を取得することがで�
 - `BASE_PATH`
   - ルーティングのルートパスを指定します。デフォルトは `/` です。
     既存の ALB にアタッチする場合など、パスルーティングする場合などに便利です。
+
+- `AWS_SSM_PARAMETER_PATH`
+  - 環境変数を取得するための SSM Parameter Store パス起点。[パラメータストアでの設定](#パラメータストアでの設定)参照。
